@@ -80,7 +80,7 @@ class CautionsBase(BaseModel):
 #     Cautions: List[CautionsBase]
 
 
-@app.get("/") 
+# @app.get("/") 
 
 # async def root():
 #     return {"Hello World"}
