@@ -1,5 +1,6 @@
 from uuid import uuid4
 from uuid import UUID
+import auth
 from fastapi import FastAPI, HTTPException,Depends
 from typing import List
 import models
@@ -9,8 +10,9 @@ from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 
 app = FastAPI()
-
+users = []
 models.Base.metadata.create_all(bind = engine)
+auth_handler = auth.AuthHandler()
 
 def get_db():
     try:
@@ -45,6 +47,9 @@ def get_db():
 #     TimePerHalf = 35
 # )]
 
+class AuthDetails(BaseModel):
+    username: str
+    password: str
 
 class GamesBase(BaseModel):
     GameID :int = Field(gt=-1, lt =200000)
@@ -78,6 +83,30 @@ class CautionsBase(BaseModel):
 
 # class CautionSchema(CautionsBase):
 #     Cautions: List[CautionsBase]
+@app.post('/register', status_code = 201)
+def register(auth_details:AuthDetails):
+    if any(x['username'] == auth_details.username for x in users):
+        raise HTTPException(status_code=400, detail='Username is taken')
+    hashed_password = auth_handler.get_password_hash(auth_details.password)
+    users.append({
+        'username': auth_details.username,
+        'password': hashed_password
+    })
+    return {}
+
+@app.post('/login')
+def login(auth_details: AuthDetails):
+    user = None
+    for x in users:
+        if x['username'] == auth_details.username:
+            user = x
+            break
+
+    if (user is None) or (not auth_handler.verify_password(auth_details.password, user['password'])):
+        raise HTTPException(status_code=401, detail='Invalid username and/or passwprd')
+    token = auth_handler.encode_token(user['username'])
+    return {'token': token}
+
 
 
 @app.get("/") 
@@ -86,11 +115,11 @@ class CautionsBase(BaseModel):
 #     return {"Hello World"}
 
 @app.get("/fetchgames") 
-async def fetch_games(db: Session = Depends(get_db)):
+async def fetch_games(username=Depends(auth_handler.auth_wrapper),db: Session = Depends(get_db)):
     return db.query(models.Games).all()
 
 @app.get("/fetchCautions") 
-async def fetch_cautions(db: Session = Depends(get_db)):
+async def fetch_cautions(username=Depends(auth_handler.auth_wrapper), db: Session = Depends(get_db)):
     return db.query(models.Cautions).all()
 
 # @app.get("/Games", response_model=List[GameSchema])
