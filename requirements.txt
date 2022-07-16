@@ -7,3 +7,4 @@ numpy==1.22.3
 pyjwt==2.1.0
 pydantic==1.9.1
 SQLAlchemy==1.4.22
+passlib==1.7.4
