@@ -4,5 +4,6 @@ python-multipart==0.0.5
 jinja2==2.11.3
 fastapi==0.78.0
 numpy==1.22.3
+pyjwt==2.1.0
 pydantic==1.9.1
 SQLAlchemy==1.4.22

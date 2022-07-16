@@ -109,7 +109,7 @@ def login(auth_details: AuthDetails):
 
 
 
-@app.get("/") 
+# @app.get("/") 
 
 # async def root():
 #     return {"Hello World"}
